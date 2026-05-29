@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from "react-router-dom"; 
 import {IconButton,TextField} from '@mui/material';
 import Button from '@mui/material/Button';
 import VideocamIcon from '@mui/icons-material/Videocam';
@@ -35,7 +36,7 @@ export default function VideoComponent(){
     let [video , setVideo]=useState();//Is camera ON or OFF
     let [audio,setAudio]=useState();//Is audio ON or OFF
     let [screen , setScreen]= useState();//Is scren shar ON or OFF
-    let [showModal,setShowModal]=useState();
+    let [showModal,setShowModal]=useState(true);
     let [screenAvailable , setScreenAvailable]=useState();//Checks if screen sharing is supported in browser
     let [messages,setMessages]=useState([]);//Stores all chat messages
     let [message,setMessage]=useState("");//Current message being typed
@@ -195,8 +196,14 @@ export default function VideoComponent(){
 
         }
     }
-    let addMessage=()=>{
+    let addMessage=(data,sender,socketIdSender)=>{
+        setMessages((prevMessages)=>[
+            ...prevMessages,{sender:sender,data:data}
+        ]);
 
+        if(socketIdSender !== socketIdRef.current){
+            setNewMessages((prevMessages)=>prevMessages+1)
+        }
     }
     let connectToSocketServer=()=>{
         socketRef.current=io.connect(server_url,{secure:false})
@@ -286,6 +293,9 @@ export default function VideoComponent(){
         setAudio(audioAvailable);
         connectToSocketServer();
     }
+
+    let routeTo=useNavigate();
+
     let connect = () => {
         setAskForUsername(false);
         getMedia();
@@ -298,6 +308,81 @@ export default function VideoComponent(){
         setAudio(!audio);
     }
 
+    let handleChat=()=>{
+        setShowModal(!showModal);
+    }
+
+    let sendMessage=()=>{
+        socketRef.current.emit("chat-message",message,username);
+        setMessage("");
+    }
+
+    let getDsiplayMediaSuccess=(stream)=>{
+        try {
+            window.localStream.getTracks().forEach(track=>track.stop())
+        } catch (error) {
+            console.log(error);
+        }
+        window.localStream=stream;
+        localVideoRef.current.srcObject=stream;
+
+        for(let id in connections){
+            if(id===socketIdRef.current) continue;
+
+            connections[id].addStream(window.localStream)
+            connections[id].createOffer().then((description)=[
+                connections[id].setLocalDescription(description)
+                .then(()=>{
+                    socketRef.current.emit("signal",id,JSON.stringify({"sdp":connections[id].localDescription}))
+                }).catch((e)=>console.log(e))
+            ])
+        }
+        stream.getTracks().forEach(track=>track.onended=()=>{
+            setScreen(false);
+            try {
+                let tracks=localVideoRef.current.srcObject.getTracks()
+                tracks.forEach(track=>track.stop())
+            } catch (e) {
+                console.log(e)
+            }
+            //blackSilence todo
+            let blackSilence=(...args)=>new MediaStream([black(...args),silence()]);
+            window.localStream=blackSilence();
+            localVideoRef.current.srcObject=window.localStream;
+
+            getUserMedia();
+        })
+    }
+
+    let getDisplayMedia=()=>{
+        if(screen) {
+            if(navigator.mediaDevices.getDisplayMedia){
+                navigator.mediaDevices.getDisplayMedia({video:true,audio:true})
+                .then(getUserMediaSuccess)
+                .then((stream)=>{})
+                .catch((e)=>console.log(e))
+            }
+        }
+    }
+
+    useEffect(()=>{
+        if(screen !== undefined){
+            getDisplayMedia();
+        }
+    },[screen]);
+
+    let handleScreen=()=>{
+        setScreen(!screen)
+    }
+    let handleEndCall=()=>{
+        try {
+            let tracks=localVideoRef.current.srcObject.getTracks();
+            tracks.forEach(track=> track.stop());
+            
+
+        } catch (error) {}
+        routeTo("/home")
+    }
     return (
         <div>
             {askForUsername === true ?
@@ -316,13 +401,33 @@ export default function VideoComponent(){
                 </div> :
                 
                 <div className={styles.meetVideoContainer}>
+                    {showModal ?<div className={styles.chatRoom}>
+                        <div className='chatContainer'>
+                            <h1>Chat</h1>
+                            <div className={styles.chattingDisplay}>
+                            {messages.length > 0 ? messages.map((item,index)=>{
+                                return(
+                                    <div styel={{marginBottom:"20px"}}key={index}>
+                                        <p style={{fontWeight:"bold"}}>{item.sender}</p>
+                                        <p>{item.data}</p>
+                                    </div>
+                                )
+                            }) :<p> No messages yet </p>}
+                            </div>
 
+                            <div className={styles.chattingArea}>
+                                
+                                <TextField value={message} onChange={(e)=> setMessage(e.target.value)} id="outlined-basic" label="Enter your chat" variant="outlined" />
+                                <Button variant='contained'onClick={sendMessage}>send</Button>
+                            </div>
+                        </div>
+                    </div>:<></>}
                     <div className={styles.buttonContainer}>
                         <IconButton onClick={handleVideo} style={{color:"white"}}>
                             {(video === true) ? <VideocamIcon/> :<VideocamOffIcon/>}
 
                         </IconButton>
-                        <IconButton  style={{color:"red"}}>
+                        <IconButton onClick={handleEndCall} style={{color:"red"}}>
                            <CallEndIcon/>
                         </IconButton>
                         <IconButton onClick={handleAudio} style={{color:"white"}}>
@@ -330,12 +435,12 @@ export default function VideoComponent(){
 
                         </IconButton>
                         {screenAvailable===true ?
-                        <IconButton style={{color:"white"}}>
+                        <IconButton onClick={handleScreen} style={{color:"white"}}>
                             {screen===true ? <ScreenShareIcon/> : <StopScreenShareIcon/>}
                         </IconButton> : <></>}
 
                         <Badge badgeContent={newMessages} max={999} color='secondary'>
-                            <IconButton style={{color:"white"}}>
+                            <IconButton onClick={handleChat} style={{color:"white"}}>
                                 <ChatIcon/>
                             </IconButton>
                         </Badge>
