@@ -1,7 +1,8 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import React from "react";
 
 export default function LandingPage(){
+    let routeTo=useNavigate()
     return(
         <div className="landingPageContainer">
             <nav>
@@ -9,9 +10,15 @@ export default function LandingPage(){
                     <h2>Video Conferencing</h2>
                 </div>
                 <div className="navList">
-                    <p>Join as Guest</p>
-                    <p>Register</p>
-                    <div role="button">
+                    <p onClick={()=>{
+                        routeTo('/qwerguest')
+                    }}>Join as Guest</p>
+                    <p onClick={()=>{
+                        routeTo('/auth')
+                    }} >Register</p>
+                    <div onClick={()=>{
+                        routeTo('/auth')
+                    }}role="button">
                         <p>Login</p>
                     </div>
                 </div>

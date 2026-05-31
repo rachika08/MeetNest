@@ -22,7 +22,9 @@ function HomeComponent(params) {
                     <h3>MeetNest</h3>
                 </div>
                 <div style={{display:"flex",alignItems:"center"}}>
-                    <IconButton>
+                    <IconButton onClick={()=>{
+                        navigate('/history')
+                    }}>
                         <RestoreIcon/>
                         
                     </IconButton>
@@ -39,7 +41,7 @@ function HomeComponent(params) {
                     <div>
                         <h2>Providing Video Call Just like quality eduction</h2>
                         <div style={{display:"flex",gap:"10px"}}>
-                            <TextField onChange={e => setMeetingCode(e.target.value)} id="outlined-basic" label="Enter your chat" variant="outlined" />
+                            <TextField onChange={e => setMeetingCode(e.target.value)} id="outlined-basic" label="Enter your meeting code" variant="outlined" />
                             <Button onClick={handleJoinVideoCall} variant="contained">Join</Button>
                         </div>
                     </div>
