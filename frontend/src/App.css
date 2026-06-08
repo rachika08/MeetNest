@@ -1,4 +1,4 @@
-.landingPageContainer{
+/* .landingPageContainer{
   width: 100vw;
   height: 100vh;
   background-image: url(/background.png);
@@ -85,4 +85,592 @@
   width: 30vw;
   height: auto;
   border-radius: 20px;
+} */
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap');
+
+/* ─── BREAKPOINTS ───
+   Mobile:  < 480px
+   Tablet:  480px – 768px
+   Desktop: > 768px
+──────────────────── */
+
+:root {
+  --yellow-50: #FFFBEB;
+  --yellow-100: #FEF3C7;
+  --yellow-200: #FDE68A;
+  --yellow-400: #FBBF24;
+  --yellow-500: #F59E0B;
+  --yellow-600: #D97706;
+  --orange-400: #FB923C;
+  --orange-500: #F97316;
+  --orange-600: #EA580C;
+  --neutral-50: #FAFAF9;
+  --neutral-100: #F5F5F4;
+  --neutral-200: #E7E5E4;
+  --neutral-400: #A8A29E;
+  --neutral-600: #57534E;
+  --neutral-800: #292524;
+  --white: #FFFFFF;
+  --shadow-sm: 0 1px 3px rgba(251,191,36,0.15), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(251,191,36,0.2), 0 2px 8px rgba(0,0,0,0.06);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --font-display: 'Sora', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--yellow-50);
+  color: var(--neutral-800);
+}
+
+/* ════════════════════════════════
+   LANDING PAGE
+════════════════════════════════ */
+.landingPageContainer {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #FFFBEB 0%, #FEF3C7 40%, #FDE68A 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.landingPageContainer::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(251,191,36,0.25) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.landingPageContainer::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: -80px;
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── Nav ── */
+.landingPageContainer nav {
+  padding: 1.2rem 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.5);
+  border-bottom: 1px solid rgba(251,191,36,0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.landingPageContainer nav h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--neutral-800);
+  letter-spacing: -0.02em;
+}
+
+.landingPageContainer nav h2 span {
+  color: var(--orange-500);
+}
+
+.landingPageContainer nav .navList {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.navPill {
+  padding: 0.5rem 1.1rem;
+  border-radius: 50px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  color: var(--neutral-600);
+  white-space: nowrap;
+}
+
+.navPill:hover {
+  background: var(--yellow-100);
+  color: var(--neutral-800);
+}
+
+.navPillPrimary {
+  background: var(--orange-500);
+  color: white;
+  padding: 0.5rem 1.3rem;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.navPillPrimary:hover {
+  background: var(--orange-600);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Hero ── */
+.landingMainContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4rem 3rem;
+  min-height: 88vh;
+  gap: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.landingHeroText {
+  max-width: 520px;
+  flex: 1;
+}
+
+.landingTagline {
+  display: inline-block;
+  background: var(--yellow-100);
+  border: 1px solid var(--yellow-400);
+  color: var(--yellow-600);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.9rem;
+  border-radius: 50px;
+  margin-bottom: 1.4rem;
+}
+
+.landingHeroText h1 {
+  font-family: var(--font-display);
+  font-size: 3.2rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--neutral-800);
+  margin-bottom: 1rem;
+}
+
+.landingHeroText h1 span {
+  color: var(--orange-500);
+}
+
+.landingHeroText p {
+  font-size: 1.05rem;
+  color: var(--neutral-600);
+  line-height: 1.65;
+  margin-bottom: 2rem;
+}
+
+.heroBtn {
+  display: inline-block;
+  background: var(--orange-500);
+  color: white;
+  text-decoration: none;
+  padding: 0.85rem 2rem;
+  border-radius: var(--radius-lg);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(249,115,22,0.35);
+}
+
+.heroBtn:hover {
+  background: var(--orange-600);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(249,115,22,0.4);
+}
+
+.landingHeroImg {
+  flex-shrink: 0;
+}
+
+.landingHeroImg img {
+  height: 68vh;
+  width: auto;
+  filter: drop-shadow(0 16px 32px rgba(251,191,36,0.3));
+}
+
+/* ════════════════════════════════
+   HOME NAVBAR
+════════════════════════════════ */
+.navBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: white;
+  border-bottom: 1px solid var(--yellow-200);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navBrand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--neutral-800);
+  letter-spacing: -0.02em;
+}
+
+.navBrand span {
+  color: var(--orange-500);
+}
+
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ════════════════════════════════
+   HOME PAGE
+════════════════════════════════ */
+.meetContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6vw;
+  padding: 4rem 3rem;
+  min-height: 88vh;
+  background: linear-gradient(160deg, #FFFBEB 0%, #FEF3C7 60%, #FDE68A 100%);
+}
+
+.leftPanel {
+  max-width: 480px;
+  flex: 1;
+}
+
+.leftPanel h2 {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: var(--neutral-800);
+  margin-bottom: 0.75rem;
+}
+
+.leftPanel h2 span {
+  color: var(--orange-500);
+}
+
+.leftPanel p {
+  color: var(--neutral-600);
+  margin-bottom: 2rem;
+  font-size: 1rem;
+}
+
+.joinCard {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 1.8rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--yellow-200);
+}
+
+.joinCard label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--neutral-600);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.joinInputRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.rightPanel {
+  flex-shrink: 0;
+}
+
+.rightPanel img {
+  width: 32vw;
+  max-width: 420px;
+  height: auto;
+  border-radius: var(--radius-lg);
+  filter: drop-shadow(0 12px 28px rgba(251,191,36,0.25));
+}
+
+/* ════════════════════════════════
+   HISTORY PAGE
+════════════════════════════════ */
+.meetingCard {
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--yellow-200);
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.meetingCard:hover {
+  border-color: var(--yellow-400);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.meetingCode {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--neutral-800);
+  word-break: break-all;
+}
+
+.meetingDate {
+  font-size: 0.85rem;
+  color: var(--neutral-400);
+  margin-top: 0.25rem;
+}
+
+.meetingBadge {
+  background: var(--yellow-100);
+  color: var(--yellow-600);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  border-radius: 50px;
+  border: 1px solid var(--yellow-200);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════
+   AUTH PAGE
+════════════════════════════════ */
+.authSidePanel {
+  background: linear-gradient(150deg, #FEF3C7 0%, #FDE68A 50%, #FBBF24 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ════════════════════════════════
+   TABLET  (max 768px)
+════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Landing nav */
+  .landingPageContainer nav {
+    padding: 1rem 1.5rem;
+  }
+
+  .landingPageContainer nav h2 {
+    font-size: 1.2rem;
+  }
+
+  /* Hide "Join as Guest" and "Register" on tablet, keep Login */
+  .navPill.hideTablet {
+    display: none;
+  }
+
+  /* Hero: stack vertically */
+  .landingMainContainer {
+    flex-direction: column-reverse;
+    padding: 2.5rem 1.5rem;
+    min-height: auto;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .landingHeroText {
+    max-width: 100%;
+  }
+
+  .landingHeroText h1 {
+    font-size: 2.2rem;
+  }
+
+  .landingHeroText p {
+    font-size: 0.95rem;
+  }
+
+  .landingHeroImg img {
+    height: 38vh;
+    max-width: 100%;
+  }
+
+  /* Home navbar */
+  .navBar {
+    padding: 0.9rem 1.2rem;
+  }
+
+  .navBrand {
+    font-size: 1.1rem;
+  }
+
+  /* Home: stack vertically */
+  .meetContainer {
+    flex-direction: column;
+    padding: 2.5rem 1.5rem;
+    min-height: auto;
+    gap: 2rem;
+    align-items: stretch;
+  }
+
+  .leftPanel {
+    max-width: 100%;
+  }
+
+  .leftPanel h2 {
+    font-size: 1.7rem;
+  }
+
+  /* Hide right panel image on tablet */
+  .rightPanel {
+    display: none;
+  }
+
+  /* Join card input stacks */
+  .joinInputRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .joinCard {
+    padding: 1.4rem;
+  }
+
+  /* History cards */
+  .meetingCard {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}
+
+/* ════════════════════════════════
+   MOBILE  (max 480px)
+════════════════════════════════ */
+@media (max-width: 480px) {
+
+  /* Landing nav — minimal */
+  .landingPageContainer nav {
+    padding: 0.9rem 1rem;
+  }
+
+  .landingPageContainer nav h2 {
+    font-size: 1.1rem;
+  }
+
+  /* Hide all nav pills except Login on mobile */
+  .navPill {
+    display: none;
+  }
+
+  .navPillPrimary {
+    padding: 0.45rem 1rem;
+    font-size: 0.82rem;
+  }
+
+  /* Hero */
+  .landingMainContainer {
+    padding: 2rem 1rem;
+  }
+
+  .landingHeroText h1 {
+    font-size: 1.8rem;
+  }
+
+  .landingTagline {
+    font-size: 0.72rem;
+    padding: 0.3rem 0.7rem;
+  }
+
+  .landingHeroText p {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .heroBtn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    display: block;
+    text-align: center;
+  }
+
+  .landingHeroImg img {
+    height: 28vh;
+  }
+
+  /* Home */
+  .navBar {
+    padding: 0.8rem 1rem;
+  }
+
+  .navBrand {
+    font-size: 1rem;
+  }
+
+  .meetContainer {
+    padding: 1.5rem 1rem;
+    gap: 1.5rem;
+  }
+
+  .leftPanel h2 {
+    font-size: 1.4rem;
+  }
+
+  .leftPanel p {
+    font-size: 0.88rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .joinCard {
+    padding: 1.1rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .joinCard label {
+    font-size: 0.78rem;
+  }
+
+  /* History */
+  .meetingCode {
+    font-size: 0.88rem;
+  }
+
+  .meetingBadge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+  }
 }
