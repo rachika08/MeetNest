@@ -1,3 +1,7 @@
+import dotenv from "dotenv";
+
+dotenv.config();
+console.log("ENV CHECK:", process.env.GEMINI_API_KEY);
 import express from "express";
 import {createServer} from "node:http";
 import { Server } from "socket.io";
@@ -6,7 +10,7 @@ import cors from "cors";
 import { connect } from "node:http2";
 import { connectToSocket } from "./controllers/socketManagers.js";
 import userRoutes from "./routes/users.routes.js";
-
+import testRoutes from "./routes/test.routes.js";
 
 const app=express();//creates app
 const server=createServer(app);//creates http server
@@ -20,6 +24,8 @@ app.use(express.urlencoded({limit:"40kb",extended:true}));
 
 
 app.use("/api/v1/users",userRoutes);
+app.use("/api/v1/test",testRoutes);
+// app.use("/api/v1/users/t",testRoutes);
 
 const start=async()=>{
     const connectionDb=await mongoose.connect("mongodb+srv://rachika008_db_user:rachika123@cluster0.5ueovn8.mongodb.net/")
