@@ -1,77 +1,3 @@
-// import React from "react";
-// import { useContext } from "react";
-// import { AuthContext } from "../contexts/AuthContext";
-// import { useState } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { useEffect } from "react";
-// import {IconButton,TextField} from '@mui/material';
-// import HomeIcon from '@mui/icons-material/Home'
-// import Card from '@mui/material/Card';
-// import CardContent from '@mui/material/CardContent';
-// import Box from '@mui/material/Box';
-// import CardActions from '@mui/material/CardActions';
-// import Button from '@mui/material/Button';
-// import Typography from '@mui/material/Typography';
-// export default function History(){
-//     const {getHistoryOfUser}=useContext(AuthContext);
-//     const [meetings,setMeetings]=useState([]);
-//     const routeTo=useNavigate();
-//     useEffect(()=>{
-//         const fetchHistory=async () =>{
-//             try{
-//                 const history=await getHistoryOfUser();
-//                 console.log(history);
-//                 setMeetings(history);
-//             }catch(error){
-//                 //snakbar
-//                 console.log(error);
-//             }
-//         }
-//         fetchHistory();
-//     },[])
-
-//     let formatDate=(dateString)=>{
-//         const date=new Date(Number(dateString));
-//         const day=date.getDate().toString().padStart(2,"0");
-//         const month=(date.getMonth()+1).toString().padStart(2,"0");
-//         const year=date.getFullYear();
-
-//         return `${day}/${month}/${year}`;
-//     }
-//     return (
-//         <div>
-//            <IconButton onClick={()=>{
-//                             routeTo('/home');
-//                         }}>
-//                             <HomeIcon/>
-//                         </IconButton>
-//             {
-                
-//                 meetings.map((e,i) =>{
-//                     return(
-//                     <>
-                        
-//                         <Card key={i} variant="outlined">
-//                             <CardContent>
-//                                 <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 14 }}>
-//                                     Code: {e.meetingCode}
-//                                 </Typography>
-//                                 <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>Date:{formatDate(e.date)}</Typography>
-//                                 <Typography variant="body2">
-//                                     your history.
-                                    
-//                                 </Typography>
-//                             </CardContent>
-                            
-//                         </Card>
-//                     </>)
-//                 })
-//             }
-//         </div>
-//     )
-
-// }
-
 import React from "react";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../contexts/AuthContext";
@@ -101,11 +27,13 @@ export default function History() {
   }, []);
 
   let formatDate = (dateString) => {
-    const date = new Date(Number(dateString));
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+      const date = new Date(dateString);
+
+      return date.toLocaleDateString("en-IN",{
+          day:"2-digit",
+          month:"long",
+          year:"numeric"
+      });
   };
 
   return (
@@ -151,7 +79,7 @@ export default function History() {
       </div>
 
       {/* ── CONTENT ── */}
-      <div style={{ padding: '2rem', maxWidth: 700, margin: '0 auto' }}>
+      <div style={{ padding: '2rem', maxWidth: 900, margin: '0 auto' }}>
 
         {meetings.length === 0 ? (
           <div style={{
@@ -175,35 +103,179 @@ export default function History() {
           </div>
         ) : (
           meetings.map((e, i) => (
-            <div key={i} className="meetingCard">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '12px',
-                  background: '#FEF3C7',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <MeetingRoomIcon sx={{ color: '#F97316', fontSize: '1.3rem' }} />
-                </div>
-                <div>
-                  <div className="meetingCode">{e.meetingCode}</div>
-                  <div className="meetingDate" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    marginTop: '3px',
+              <div key={i} className="meetingCard">
+
+                  <div style={{
+                      display:"flex",
+                      justifyContent:"space-between",
+                      alignItems:"center"
                   }}>
-                    <CalendarTodayIcon sx={{ fontSize: '0.7rem', color: '#A8A29E' }} />
-                    {formatDate(e.date)}
+
+                      <div style={{
+                          display:'flex',
+                          alignItems:'center',
+                          gap:"14px"
+                      }}>
+
+                          <div style={{
+                              width:44,
+                              height:44,
+                              borderRadius:'12px',
+                              background:'#FEF3C7',
+                              display:'flex',
+                              alignItems:'center',
+                              justifyContent:'center'
+                          }}>
+                              <MeetingRoomIcon 
+                              sx={{
+                                  color:'#F97316'
+                              }}/>
+                          </div>
+
+
+                          <div>
+
+                              <div className="meetingCode">
+                                  {e.meetingCode}
+                              </div>
+
+
+                              <div className="meetingDate">
+
+                                  <CalendarTodayIcon 
+                                  sx={{
+                                      fontSize:"0.8rem"
+                                  }}/>
+
+                                  {formatDate(e.createdAt)}
+
+                              </div>
+
+                          </div>
+
+                      </div>
+
+
+                      <span className="meetingBadge">
+                          Completed
+                      </span>
+
+
                   </div>
-                </div>
+
+
+                  {/* Participants */}
+
+                  <div style={{
+                      marginTop:"15px",
+                      fontSize:"0.9rem",
+                      color:"#57534E"
+                  }}>
+                      <div className="sectionTitle">
+                      👥 Participants
+                      </div>
+
+                      <div style={{
+                      display:"flex",
+                      gap:"8px",
+                      flexWrap:"wrap"
+                      }}>
+
+                      {
+                      e.participants?.map((person,index)=>(
+                      <span
+                      key={index}
+                      style={{
+                      background:"#FEF3C7",
+                      padding:"6px 12px",
+                      borderRadius:"20px",
+                      fontSize:"0.8rem",
+                      color:"#92400E"
+                      }}
+                      >
+                      {person}
+                      </span>
+                      ))
+                      }
+
+                      </div>
+                      {/* 👥 
+                      {e.participants?.join(", ")} */}
+
+                  </div>
+
+
+
+                  {/* AI Summary */}
+                  <div className="aiSection">
+
+                  <h4 className="sectionTitle">
+                  AI Summary
+                  </h4>
+
+                  <p className="summaryText">
+                  {e.aiNotes?.summary}
+                  </p>
+
+                  </div>
+
+
+
+                  {/* Key Points */}
+                  <div className="aiSection">
+
+                  <h4 className="sectionTitle">
+                  Key Points
+                  </h4>
+
+
+                  <ul className="pointList">
+
+                  {
+                  e.aiNotes?.keyPoints?.map((p,index)=>(
+                  <li key={index}>
+                  {p}
+                  </li>
+                  ))
+                  }
+
+                  </ul>
+
+                  </div>
+
+                  {/* Action Items */}
+
+                  {
+                  e.aiNotes?.actionItems?.length>0 &&
+                  <div className="aiSection">
+
+                  <h4 className="sectionTitle">
+                  Action Items
+                  </h4>
+
+
+                  <ul className="pointList">
+
+                  {
+                  e.aiNotes?.actionItems?.map((a,index)=>(
+                  <li key={index}>
+                  {a}
+                  </li>
+                  ))
+                  }
+
+                  </ul>
+
+                  </div>
+
+
+                  }
+
+
+
               </div>
-              <span className="meetingBadge">Attended</span>
-            </div>
           ))
+          
         )}
       </div>
     </div>

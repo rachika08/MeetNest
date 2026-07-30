@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import {hash} from "bcrypt";
 import crypto from "crypto";
 import {Meeting} from "../models/meeting.model.js";
+import { MeetingNotes } from "../models/meetingNotes.js";
 
 const login=async(req,res)=>{
     const {username,password}=req.body;
@@ -54,30 +55,124 @@ const register= async (req,res)=>{
     }
 }
 
-const getUserHistory=async(req,res)=>{
-    const {token} =req.query;
+const getUserHistory = async (req, res) => {
+
+    const { token } = req.query;
+    console.log("Token:", token);
     try {
-        const user = await User.findOne({token:token});
-        const meetings=await Meeting.find({user_id: user.username});
-        res.json(meetings);
+
+        const user = await User.findOne({
+            token: token
+        });
+        console.log("Logged in user:", user);
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        // Meeting history
+        const meetings = await Meeting.find({
+            user_id: user.username
+        }).sort({ _id: -1 });
+        console.log("Meetings:", meetings);
+
+        const history = [];
+
+        for (const meeting of meetings) {
+
+            const notes = await MeetingNotes.findOne({
+                meetingCode: meeting.meetingCode
+            });
+
+            history.push({
+
+                meetingCode: meeting.meetingCode,
+
+                createdAt: meeting._id.getTimestamp(),
+
+                aiNotes: notes?.aiNotes || {
+                    summary: "",
+                    keyPoints: [],
+                    actionItems: []
+                },
+
+                participants: notes?.participants || [],
+
+                transcript: notes?.transcript || []
+
+            });
+
+        }
+
+        res.json(history);
+
     } catch (error) {
-        res.json({message : `Something went wrong ${error}`})
+
+        console.log(error);
+
+        res.status(500).json({
+            message: error.message
+        });
+
     }
+
 }
 
 const addToHistory= async(req,res) =>{
+
+    console.log("ADD HISTORY BODY:", req.body);
+
     const {token,meeting_code}=req.body;
+
     try {
+
         const user = await User.findOne({token : token});
+
+        console.log("USER FROM TOKEN:", user);
+
         const newMeeting = new Meeting({
             user_id: user.username,
             meetingCode: meeting_code
-        })
+        });
+
         await newMeeting.save();
-        res.status(httpStatus.CREATED).json({message: "Added code to history "})
+
+        console.log("SAVED:", newMeeting);
+
+        res.status(httpStatus.CREATED)
+        .json({message:"Added code to history"});
+
     } catch (error) {
-        res.json({message:`Something went wrong ${error}`})
+        console.log(error);
+        res.json({message:`Something went wrong ${error}`});
     }
 }
+
+// const getUserHistory=async(req,res)=>{
+//     const {token} =req.query;
+//     try {
+//         const user = await User.findOne({token:token});
+//         const meetings=await Meeting.find({user_id: user.username});
+//         res.json(meetings);
+//     } catch (error) {
+//         res.json({message : `Something went wrong ${error}`})
+//     }
+// }
+
+// const addToHistory= async(req,res) =>{
+//     const {token,meeting_code}=req.body;
+//     try {
+//         const user = await User.findOne({token : token});
+//         const newMeeting = new Meeting({
+//             user_id: user.username,
+//             meetingCode: meeting_code
+//         })
+//         await newMeeting.save();
+//         res.status(httpStatus.CREATED).json({message: "Added code to history "})
+//     } catch (error) {
+//         res.json({message:`Something went wrong ${error}`})
+//     }
+// }
 
 export {login , register, getUserHistory, addToHistory};

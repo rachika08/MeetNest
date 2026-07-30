@@ -3,7 +3,20 @@ import { MeetingNotes } from "../models/meetingNotes.js";
 import { generateMeetingNotes } from "../services/gemini.js";
 const router = Router();
 
-
+router.get("/generate-notes/:meetingCode",async(req,res)=>{
+    try{
+        const {meetingCode}=req.params;
+        const meeting=await MeetingNotes.findOne({
+            meetingCode
+        });
+        if(!meeting){
+            return res.status(404).json({message:"meeting with this code not found"});
+        }
+        res.json(meeting);
+    }catch(error){
+        return res.status(500).json({message:error.message});
+    }
+})
 router.post("/generate-notes/:meetingCode", async (req, res) => {
 
     try {

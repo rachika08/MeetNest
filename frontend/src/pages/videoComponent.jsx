@@ -12,6 +12,7 @@ import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
 import Badge from '@mui/material/Badge';
 import ChatIcon from '@mui/icons-material/Chat';
 import server from "../environment";
+import axios from 'axios';
 
 import io from "socket.io-client";
 
@@ -487,22 +488,56 @@ export default function VideoComponent(){
 
     //     routeTo("/home")
     // }
-    let handleEndCall=()=>{
-
-        if(recognitionRef.current){
-            recognitionRef.current.stop();
-        }
+    let handleEndCall = async()=>{
 
         try {
-            let tracks=localVideoRef.current.srcObject.getTracks();
+
+            await axios.post(
+            `${server_url}/api/v1/test/generate-notes/${getMeetingCode()}`
+            );
+
+
+            console.log("AI notes generated");
+
+        } catch(error){
+
+            console.log(
+            "AI generation failed",
+            error
+            );
+
+        }
+
+
+        try {
+
+            let tracks =
+            localVideoRef.current.srcObject.getTracks();
+
             tracks.forEach(track=>track.stop());
 
         } catch(error){}
 
-        console.log("Transcript:", transcript);
 
         routeTo("/home");
+
     }
+    // let handleEndCall=()=>{
+
+    //     if(recognitionRef.current){
+    //         recognitionRef.current.stop();
+    //     }
+
+    //     try {
+    //         let tracks=localVideoRef.current.srcObject.getTracks();
+    //         tracks.forEach(track=>track.stop());
+
+    //     } catch(error){}
+
+    //     console.log("Transcript:", transcript);
+
+    //     routeTo("/home");
+    // }
     
     return (
         <div>
