@@ -1,8 +1,9 @@
 import {Server} from "socket.io";
-
+import {MeetingNotes} from "../models/meetingNotes.js";
 let connections={};
 let messages={};
 let timeOnline={};
+let meetingTranscripts={};
 
 export const connectToSocket=(server)=>{
     const io=new Server(server,{
@@ -76,6 +77,77 @@ export const connectToSocket=(server)=>{
                 }
             }
         })
+        
+        socket.on("meeting-transcript", async(data)=>{
+            console.log("EVENT RECEIVED FROM FRONTEND");
+            console.log(data);
+            const {
+                meetingCode,
+                username,
+                text
+            } = data;
+
+
+            try{
+                let meeting = await MeetingNotes.findOne({ meetingCode });
+
+                if (!meeting) {
+                    meeting = new MeetingNotes({
+                        meetingCode,
+                        participants: [username],
+                        transcript: [
+                            {
+                                username,
+                                text
+                            }
+                        ]
+                    });
+                } else {
+
+                    if (!meeting.participants.includes(username)) {
+                        meeting.participants.push(username);
+                    }
+
+                    const lastMessage =
+                        meeting.transcript[meeting.transcript.length - 1];
+
+                    if (
+                        lastMessage &&
+                        lastMessage.username === username
+                    ) {
+                        lastMessage.text += " " + text;
+                    } else {
+                        meeting.transcript.push({
+                            username,
+                            text
+                        });
+                    }
+                }
+
+                await meeting.save();
+
+                
+
+                
+
+
+                console.log(
+                    "Saved transcript:",
+                    username,
+                    text
+                );
+
+
+            }catch(error){
+
+                console.log(
+                    "Transcript save error:",
+                    error
+                );
+
+            }
+
+        });
     })
     return io;
 }

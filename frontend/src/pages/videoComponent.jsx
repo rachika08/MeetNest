@@ -42,6 +42,8 @@ export default function VideoComponent(){
     let [screenAvailable , setScreenAvailable]=useState();//Checks if screen sharing is supported in browser
     let [messages,setMessages]=useState([]);//Stores all chat messages
     let [message,setMessage]=useState("");//Current message being typed
+    let [transcript,setTranscript]=useState("");
+    let recognitionRef=useRef(null);
     let [newMessages,setNewMessages]=useState(0);//Count of unread messages
     let [askForUsername,setAskForUsername]=useState(true);//Show username input modal or not
     let [username,setUsername]=useState("");//Stores user’s name
@@ -286,9 +288,82 @@ export default function VideoComponent(){
         })
     
     
-    
-    
     }
+    const getMeetingCode = () => {
+        return window.location.pathname.substring(1);
+    }
+    const startSpeechRecognition = () => {
+
+        const SpeechRecognition =
+            window.SpeechRecognition ||
+            window.webkitSpeechRecognition;
+
+        if(!SpeechRecognition){
+            console.log("Speech recognition not supported");
+            return;
+        }
+
+        if(recognitionRef.current){
+            recognitionRef.current.stop();
+        }
+
+        const recognition = new SpeechRecognition();
+
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+        recognition.maxAlternatives = 1;
+
+
+        recognition.onresult = (event) => {
+
+            let finalText = "";
+
+            for(let i = event.resultIndex; i < event.results.length; i++){
+
+                if(event.results[i].isFinal){
+                    finalText += event.results[i][0].transcript;
+                }
+            }
+
+            if(finalText){
+
+                setTranscript(prev => prev + " " + finalText);
+                
+                console.log("Sending transcript to backend:", {
+                    meetingCode:getMeetingCode(),
+                    username,
+                    text:finalText
+                });
+                
+                socketRef.current.emit(
+                    "meeting-transcript",
+                    {
+                        meetingCode: getMeetingCode(),
+                        username: username,
+                        text: finalText
+                    }
+                );
+            }
+        };
+
+
+        recognition.onerror = (event)=>{
+            console.log("Speech error:", event.error);
+        };
+
+
+        recognition.onend = () => {
+            console.log("Speech recognition ended");
+        };
+
+
+        recognition.start();
+
+        recognitionRef.current = recognition;
+
+        console.log("Speech recognition started");
+    };
 
     let getMedia=()=>{
         setVideo(videoAvailable);
@@ -301,13 +376,37 @@ export default function VideoComponent(){
     let connect = () => {
         setAskForUsername(false);
         getMedia();
+        startSpeechRecognition();
     }
 
     let handleVideo=()=>{
         setVideo(!video);
     }
+    // let handleAudio=()=>{
+    //     setAudio(!audio);
+    // }
     let handleAudio=()=>{
-        setAudio(!audio);
+
+        setAudio(prev => {
+
+            if(prev){
+                // Turning mic OFF
+                if(recognitionRef.current){
+                    recognitionRef.current.stop();
+                    recognitionRef.current = null;
+                }
+
+                return false;
+
+            }else{
+
+                // Turning mic ON
+                startSpeechRecognition();
+
+                return true;
+            }
+
+        });
     }
 
     let handleChat=()=>{
@@ -376,101 +475,35 @@ export default function VideoComponent(){
     let handleScreen=()=>{
         setScreen(!screen)
     }
-    let handleEndCall=()=>{
-        try {
-            let tracks=localVideoRef.current.srcObject.getTracks();
-            tracks.forEach(track=> track.stop());
+    // let handleEndCall=()=>{
+    //     try {
+    //         let tracks=localVideoRef.current.srcObject.getTracks();
+    //         tracks.forEach(track=> track.stop());
             
 
-        } catch (error) {}
-        routeTo("/home")
+    //     } catch (error) {}
+
+
+
+    //     routeTo("/home")
+    // }
+    let handleEndCall=()=>{
+
+        if(recognitionRef.current){
+            recognitionRef.current.stop();
+        }
+
+        try {
+            let tracks=localVideoRef.current.srcObject.getTracks();
+            tracks.forEach(track=>track.stop());
+
+        } catch(error){}
+
+        console.log("Transcript:", transcript);
+
+        routeTo("/home");
     }
-    // return (
-    //     <div>
-    //         {askForUsername === true ?
-    //             <div>
-    //                 <h2>Enter into lobby</h2>
-    //                 <TextField 
-    //                     id="outlined-basic" 
-    //                     label="Username" 
-    //                     value={username} 
-    //                     onChange={(e)=>setUsername(e.target.value)}
-    //                 />
-    //                 <Button variant="contained" onClick={connect} >Connect</Button>
-    //             <div>
-    //                 <video ref={localVideoRef} autoPlay muted></video>
-    //             </div>
-    //             </div> :
-                
-    //             <div className={styles.meetVideoContainer}>
-    //                 {showModal ?<div className={styles.chatRoom}>
-    //                     <div className='chatContainer'>
-    //                         <h1>Chat</h1>
-    //                         <div className={styles.chattingDisplay}>
-    //                         {messages.length > 0 ? messages.map((item,index)=>{
-    //                             return(
-    //                                 <div styel={{marginBottom:"20px"}}key={index}>
-    //                                     <p style={{fontWeight:"bold"}}>{item.sender}</p>
-    //                                     <p>{item.data}</p>
-    //                                 </div>
-    //                             )
-    //                         }) :<p> No messages yet </p>}
-    //                         </div>
-
-    //                         <div className={styles.chattingArea}>
-                                
-    //                             <TextField value={message} onChange={(e)=> setMessage(e.target.value)} id="outlined-basic" label="Enter your chat" variant="outlined" />
-    //                             <Button variant='contained'onClick={sendMessage}>send</Button>
-    //                         </div>
-    //                     </div>
-    //                 </div>:<></>}
-    //                 <div className={styles.buttonContainer}>
-    //                     <IconButton onClick={handleVideo} style={{color:"white"}}>
-    //                         {(video === true) ? <VideocamIcon/> :<VideocamOffIcon/>}
-
-    //                     </IconButton>
-    //                     <IconButton onClick={handleEndCall} style={{color:"red"}}>
-    //                        <CallEndIcon/>
-    //                     </IconButton>
-    //                     <IconButton onClick={handleAudio} style={{color:"white"}}>
-    //                         {(audio === true) ? <MicIcon/> :<MicOffIcon/>}
-
-    //                     </IconButton>
-    //                     {screenAvailable===true ?
-    //                     <IconButton onClick={handleScreen} style={{color:"white"}}>
-    //                         {screen===true ? <ScreenShareIcon/> : <StopScreenShareIcon/>}
-    //                     </IconButton> : <></>}
-
-    //                     <Badge badgeContent={newMessages} max={999} color='secondary'>
-    //                         <IconButton onClick={handleChat} style={{color:"white"}}>
-    //                             <ChatIcon/>
-    //                         </IconButton>
-    //                     </Badge>
-    //                 </div>
-
-    //                 <video className={styles.meetUserVideo} ref={localVideoRef} autoPlay muted></video>
-    //                 <div  className={styles.conferenceView}>
-    //                 {videos.map((video)=>(
-    //                     <div key={video.socketId}>
-    //                         {/* <h2>{video.socketId}</h2> */}
-    //                         <video 
-    //                             data-socket={video.socketId}
-    //                             ref={ref=>{
-    //                                 if(ref && video.stream){
-    //                                     ref.srcObject=video.stream;
-    //                                 }
-    //                             }}
-    //                             autoPlay
-    //                         >
-                                     
-    //                         </video>
-    //                     </div>
-    //                 ))}
-    //                 </div> 
-    //             </div>
-    //         }
-    //     </div>
-    // )
+    
     return (
         <div>
           {askForUsername === true ? (
