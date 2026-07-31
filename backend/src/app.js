@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 
 dotenv.config();
-console.log("ENV CHECK:", process.env.GEMINI_API_KEY);
+// console.log("ENV CHECK:", process.env.GEMINI_API_KEY);
 import express from "express";
 import {createServer} from "node:http";
 import { Server } from "socket.io";
@@ -28,7 +28,7 @@ app.use("/api/v1/test",testRoutes);
 // app.use("/api/v1/users/t",testRoutes);
 
 const start=async()=>{
-    const connectionDb=await mongoose.connect("mongodb+srv://rachika008_db_user:rachika123@cluster0.5ueovn8.mongodb.net/")
+    const connectionDb=await mongoose.connect(process.env.MONGO_URI);
     console.log(`mongo connected db host ${connectionDb.connection.host}`)
     server.listen(app.get("port"),()=>{
     console.log("listening at port 8000")})}
