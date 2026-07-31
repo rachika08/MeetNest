@@ -31,8 +31,9 @@ const peerConfigConnections={
 }
 
 export default function VideoComponent(){
-    var socketRef=useRef();//👉 Stores your socket connection (like Socket.io) ✔ Used to send/receive signaling messages
-    let socketIdRef=useRef();//👉 Stores your unique socket ID //Helps identify you among users
+    var socketRef=useRef(); 
+    // Stores your socket connection (like Socket.io) ✔ Used to send/receive signaling messages
+    let socketIdRef=useRef(); // Stores your unique socket ID //Helps identify you among users
     let localVideoRef=useRef();//Reference to your own video element (camera stream) Used to attach webcam stream
     let [videoAvailable , setVideoAvailable]=useState(true);//Whether camera is available on device
     let [audioAvailable , setAudioAvailable]=useState(true);//Whether audio is available on device
@@ -50,90 +51,69 @@ export default function VideoComponent(){
     let [username,setUsername]=useState("");//Stores user’s name
     const videoRef=useRef([]); //👉 Stores multiple video elements (other users)Used in group calls
     let [videos,setVideos]=useState([]);//Stores all active video streams (participants)
+    const cameraStreamRef = useRef(null);
+    const screenStreamRef = useRef(null);
 
+    const getPermission = async () => {
+        // Screen share capability check — independent of camera/mic
+        setScreenAvailable(!!navigator.mediaDevices.getDisplayMedia);
 
-    const getPermission=async()=>{
         try {
-            const videoPermission=await navigator.mediaDevices.getUserMedia({video:true});
-            if(videoPermission){
-                setVideoAvailable(true);
-            }else{
-                setVideoAvailable(false);
-            }
-            const audioPermission=await navigator.mediaDevices.getUserMedia({audio:true});
-            if(audioPermission){
-                setAudioAvailable(true);
-            }else{
-                setAudioAvailable(false);
-            }
-            if(navigator.mediaDevices.getDisplayMedia){
-                setScreenAvailable(true);
-            }else{
-                setScreenAvailable(false);
-            }
-
-            if(videoAvailable || audioAvailable){
-                const userMediaStream=await navigator.mediaDevices.getUserMedia({video:videoAvailable,audio:audioAvailable});
-                if(userMediaStream){
-                    window.localStream=userMediaStream;
-                    if(localVideoRef.current){
-                        localVideoRef.current.srcObject=userMediaStream; //localVideoRef is a <video> element This line shows your webcam video in UI
-                    }
-                }
-            }
-        } catch (error) {
-            console.log(error);
+            await navigator.mediaDevices.getUserMedia({ video: true });
+            setVideoAvailable(true);
+        } catch (e) {
+            console.log("No camera:", e);
+            setVideoAvailable(false);
         }
 
-    }
+        try {
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+            setAudioAvailable(true);
+        } catch (e) {
+            console.log("No mic:", e);
+            setAudioAvailable(false);
+        }
+
+        try {
+            const userMediaStream = await navigator.mediaDevices.getUserMedia({
+                video: videoAvailable,
+                audio: audioAvailable
+            });
+            window.localStream = userMediaStream;
+            if (localVideoRef.current) localVideoRef.current.srcObject = userMediaStream;
+        } catch (e) {
+            console.log("Could not get combined stream:", e);
+        }
+    };
+    
     useEffect(()=>{
         getPermission();
 
     },[]);
-    let getUserMediaSuccess=(stream)=>{
+    let getUserMediaSuccess = (stream) => {
         try {
-            window.localStream.getTracks().forEach(track=>track.stop());
-        } catch (e) {
-            console.log(e);
-        }
-        window.localStream=stream;
-        localVideoRef.current.srcObject=stream;
-        for(let id in connections){
-            if(id === socketIdRef.current) continue;
-            connections[id].addStream(window.localStream)
-            connections[id].createOffer().then((description)=>{
-                connections[id].setLocalDescription(description)
-                .then(()=>{
-                    socketRef.current.emit("signal",id,JSON.stringify({"sdp":connections[id].localDescription}))
-                })
-                .catch(e=>console.log(e))
-            })
-        }
-        stream.getTracks().forEach(track=>track.onended=()=>{
-            setVideo(false);
-            setAudio(false);
-            try {
-                let tracks=localVideoRef.current.srcObject.getTracks()
-                tracks.forEach(track=>track.stop())
-            } catch (e) {
-                console.log(e)
-            }
-            //blackSilence todo
-            let blackSilence=(...args)=>new MediaStream([black(...args),silence()]);
-            window.localStream=blackSilence();
-            localVideoRef.current.srcObject=window.localStream;
+            cameraStreamRef.current?.getTracks().forEach(track => track.stop());
+        } catch (e) { console.log(e); }
 
-            for(let id in connections){
-                connections[id].addStream(window.localStream)
-                connections[id].createOffer().then((description)=>{
-                    connections[id].setLocalDescription(description)
-                    .then(()=>{
-                        socketRef.current.emit("signal",id,JSON.stringify({"sdp":connections[id].localDescription}))
-                    }).catch(e=>console.log(e))
-                })
+        cameraStreamRef.current = stream;
+
+        // Only show/send this stream if we're NOT currently screen sharing
+        if (!screen) {
+            window.localStream = stream;
+            localVideoRef.current.srcObject = stream;
+            for (let id in connections) {
+                if (id === socketIdRef.current) continue;
+                connections[id].addStream(window.localStream);
+                connections[id].createOffer().then((description) => {
+                    connections[id].setLocalDescription(description).then(() => {
+                        socketRef.current.emit("signal", id, JSON.stringify({ "sdp": connections[id].localDescription }));
+                    }).catch(e => console.log(e));
+                });
             }
-        })
-    }
+        }
+    };
+    
+    
     let silence=()=>{
         let ctx=new AudioContext()
         let oscillator=ctx.createOscillator();
@@ -169,10 +149,15 @@ export default function VideoComponent(){
     }
 
     useEffect(()=>{
-        if(video !== undefined && audio !== undefined){
+        if (video !== undefined && audio !== undefined && !screen) {
             getUserMedia();
         }
     },[audio,video]);
+    // useEffect(()=>{
+    //     if(video !== undefined && audio !== undefined){
+    //         getUserMedia();
+    //     }
+    // },[audio,video]);
     
     let gotMessageFromServer=(fromId,message)=>{
         var signal=JSON.parse(message);
@@ -419,53 +404,62 @@ export default function VideoComponent(){
         setMessage("");
     }
 
-    let getDsiplayMediaSuccess=(stream)=>{
-        try {
-            window.localStream.getTracks().forEach(track=>track.stop())
-        } catch (error) {
-            console.log(error);
-        }
-        window.localStream=stream;
-        localVideoRef.current.srcObject=stream;
+    let getDsiplayMediaSuccess = (stream) => {
+        screenStreamRef.current = stream;
+        window.localStream = stream;
+        localVideoRef.current.srcObject = stream;
 
-        for(let id in connections){
-            if(id===socketIdRef.current) continue;
-
-            connections[id].addStream(window.localStream)
-            connections[id].createOffer().then((description)=[
-                connections[id].setLocalDescription(description)
-                .then(()=>{
-                    socketRef.current.emit("signal",id,JSON.stringify({"sdp":connections[id].localDescription}))
-                }).catch((e)=>console.log(e))
-            ])
+        for (let id in connections) {
+            if (id === socketIdRef.current) continue;
+            connections[id].addStream(window.localStream);
+            connections[id].createOffer().then((description) => {
+                connections[id].setLocalDescription(description).then(() => {
+                    socketRef.current.emit("signal", id, JSON.stringify({ "sdp": connections[id].localDescription }));
+                }).catch((e) => console.log(e));
+            });
         }
-        stream.getTracks().forEach(track=>track.onended=()=>{
+
+        // Only this stream's video track should trigger "share ended" cleanup
+        stream.getVideoTracks()[0].onended = () => {
             setScreen(false);
-            try {
-                let tracks=localVideoRef.current.srcObject.getTracks()
-                tracks.forEach(track=>track.stop())
-            } catch (e) {
-                console.log(e)
+            screenStreamRef.current = null;
+            // fall back to camera stream we already have, don't re-request mic/cam
+            if (cameraStreamRef.current) {
+                window.localStream = cameraStreamRef.current;
+                localVideoRef.current.srcObject = cameraStreamRef.current;
+                for (let id in connections) {
+                    connections[id].addStream(window.localStream);
+                    connections[id].createOffer().then((description) => {
+                        connections[id].setLocalDescription(description).then(() => {
+                            socketRef.current.emit("signal", id, JSON.stringify({ "sdp": connections[id].localDescription }));
+                        }).catch(e => console.log(e));
+                    });
+                }
+            } else {
+                getUserMedia();
             }
-            //blackSilence todo
-            let blackSilence=(...args)=>new MediaStream([black(...args),silence()]);
-            window.localStream=blackSilence();
-            localVideoRef.current.srcObject=window.localStream;
+        };
+    };
 
-            getUserMedia();
-        })
-    }
-
-    let getDisplayMedia=()=>{
-        if(screen) {
-            if(navigator.mediaDevices.getDisplayMedia){
-                navigator.mediaDevices.getDisplayMedia({video:true,audio:true})
-                .then(getUserMediaSuccess)
-                .then((stream)=>{})
-                .catch((e)=>console.log(e))
+    
+    let getDisplayMedia = () => {
+        if (screen) {
+            if (navigator.mediaDevices.getDisplayMedia) {
+                navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+                    .then(getDsiplayMediaSuccess)   // ✅ fixed
+                    .catch((e) => console.log(e));
+            }
+        } else {
+            // user turned screen share off manually
+            screenStreamRef.current?.getTracks().forEach(track => track.stop());
+            screenStreamRef.current = null;
+            if (cameraStreamRef.current) {
+                window.localStream = cameraStreamRef.current;
+                localVideoRef.current.srcObject = cameraStreamRef.current;
             }
         }
-    }
+    };
+    
 
     useEffect(()=>{
         if(screen !== undefined){
@@ -476,18 +470,7 @@ export default function VideoComponent(){
     let handleScreen=()=>{
         setScreen(!screen)
     }
-    // let handleEndCall=()=>{
-    //     try {
-    //         let tracks=localVideoRef.current.srcObject.getTracks();
-    //         tracks.forEach(track=> track.stop());
-            
-
-    //     } catch (error) {}
-
-
-
-    //     routeTo("/home")
-    // }
+    
     let handleEndCall = async()=>{
 
         try {
@@ -522,22 +505,7 @@ export default function VideoComponent(){
         routeTo("/home");
 
     }
-    // let handleEndCall=()=>{
-
-    //     if(recognitionRef.current){
-    //         recognitionRef.current.stop();
-    //     }
-
-    //     try {
-    //         let tracks=localVideoRef.current.srcObject.getTracks();
-    //         tracks.forEach(track=>track.stop());
-
-    //     } catch(error){}
-
-    //     console.log("Transcript:", transcript);
-
-    //     routeTo("/home");
-    // }
+    
     
     return (
         <div>
@@ -732,7 +700,10 @@ export default function VideoComponent(){
                 >
                   {video ? <VideocamIcon /> : <VideocamOffIcon />}
                 </IconButton>
-    
+                  
+                <div>
+                Screen Support: {String(screenAvailable)}
+                </div>  
                 {/* Screen Share */}
                 {screenAvailable && (
                   <IconButton
